@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     # Apps do projeto
     'apps.authentication',
+    'apps.cameras',
 ]
 
 MIDDLEWARE = [

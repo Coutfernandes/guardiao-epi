@@ -175,18 +175,26 @@ useEffect(() => {
             <div style={{
               backgroundColor: '#F1F5F9', height: '180px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative'
+              position: 'relative', overflow: 'hidden'
+        }}>
+            <span style={{
+              position: 'absolute', top: '0.75rem', left: '0.75rem',
+              backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+              fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem',
+              borderRadius: '4px', zIndex: 1
             }}>
-              <span style={{
-                position: 'absolute', top: '0.75rem', left: '0.75rem',
-                backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
-                fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem',
-                borderRadius: '4px'
-              }}>
-                {camera.identificador}
-              </span>
-              <Camera size={40} color="#CBD5E1" />
-            </div>
+              {camera.identificador}
+            </span>
+          {camera.status === 'online' ? (
+              <img
+              src={`http://127.0.0.1:8000/api/cameras/${camera.id}/stream/?token=${localStorage.getItem('access_token')}`}
+              alt={camera.nome}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <Camera size={40} color="#CBD5E1" />
+        )}
+      </div>
             <div style={{ padding: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                 <h3 style={{ color: '#003050', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>{camera.nome}</h3>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Camera, Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { Camera, Plus, Pencil, Trash2, Search, Wifi } from 'lucide-react'
 import api from '../services/api'
 
 function StatusBadge({ status }) {
@@ -106,7 +106,8 @@ export default function Cameras() {
 
 
 useEffect(() => {
-  api.get('/cameras/').then(res => setCameras(res.data))
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  void carregarCameras()
 }, [])
 
   const handleSalvar = async (form) => {
@@ -118,7 +119,10 @@ useEffect(() => {
     await carregarCameras()
     setModal(null)
   }
-
+  const handleVerificar = async (id) => {
+      await api.post(`/cameras/${id}/verificar/`)
+      await carregarCameras()
+}
   const handleDeletar = async (id) => {
     if (window.confirm('Deseja remover esta camera?')) {
       await api.delete(`/cameras/${id}/`)
@@ -191,6 +195,7 @@ useEffect(() => {
               <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: '0 0 1rem 0' }}>
                 {camera.setor} {camera.localizacao ? `• ${camera.localizacao}` : ''}
               </p>
+
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button onClick={() => setModal(camera)} style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -200,6 +205,13 @@ useEffect(() => {
                 }}>
                   <Pencil size={14} /> Editar
                 </button>
+                <button onClick={() => handleVerificar(camera.id)} style={{
+                  padding: '0.5rem 0.75rem', border: '1px solid #DBEAFE',
+                  borderRadius: '8px', background: 'white', color: '#3B82F6',
+                  cursor: 'pointer'
+                }}>
+                  <Wifi size={14} />
+                </button>
                 <button onClick={() => handleDeletar(camera.id)} style={{
                   padding: '0.5rem 0.75rem', border: '1px solid #FEE2E2',
                   borderRadius: '8px', background: 'white', color: '#EF4444',
@@ -208,6 +220,7 @@ useEffect(() => {
                   <Trash2 size={14} />
                 </button>
               </div>
+
             </div>
           </div>
         ))}

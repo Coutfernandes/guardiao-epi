@@ -13,8 +13,10 @@ model = None
 def carregar_modelo():
     global model
     if model is None:
-        os.makedirs(os.path.join(settings.BASE_DIR, 'models'), exist_ok=True)
-        model = YOLO('yolov8n.pt')
+        pasta_models = os.path.join(settings.BASE_DIR, 'models')
+        os.makedirs(pasta_models, exist_ok=True)
+        caminho_modelo = os.path.join(pasta_models, 'yolov8n.pt')
+        model = YOLO(caminho_modelo)
     return model
 
 

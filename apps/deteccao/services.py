@@ -93,6 +93,41 @@ def detectar_epis(frame):
                     epis_presentes.append(classe_nome)
     return epis_ausentes, epis_presentes
 
+def gerar_alerta(camera, ocorrencia):
+    """
+    Gera alerta respeitando cooldown de 2 minutos por camera.
+    Regra RN16: aguardar 2 minutos antes de novo alerta para a mesma camera.
+    """
+    from .models import Alerta
+    from django.utils import timezone
+    from datetime import timedelta
+
+    dois_minutos_atras = timezone.now() - timedelta(minutes=2)
+    alerta_recente = Alerta.objects.filter(
+        camera=camera,
+        criado_em__gte=dois_minutos_atras
+    ).exists()
+
+    if alerta_recente:
+        return None
+
+    if ocorrencia.tipo == 'epi_ausente':
+        nivel = 'critico'
+        epis = ', '.join(ocorrencia.epis_ausentes)
+        mensagem = f'EPIs ausentes detectados na camera {camera.identificador}: {epis}'
+    elif ocorrencia.tipo == 'equipment_fault':
+        nivel = 'aviso'
+        mensagem = f'Camera {camera.identificador} perdeu conexao'
+    else:
+        return None
+
+    alerta = Alerta.objects.create(
+        ocorrencia=ocorrencia,
+        camera=camera,
+        nivel=nivel,
+        mensagem=mensagem,
+    )
+    return alerta
 
 def processar_camera(camera):
     from .models import Ocorrencia
@@ -102,13 +137,14 @@ def processar_camera(camera):
     if frame is None:
         camera.status = 'offline'
         camera.save()
-        Ocorrencia.objects.create(
+        ocorrencia = Ocorrencia.objects.create(
             camera=camera,
             tipo='equipment_fault',
             status='nao_conforme',
             epis_ausentes=[],
             pessoas_detectadas=0,
         )
+        gerar_alerta(camera, ocorrencia)
         return
 
     camera.status = 'online'
@@ -123,7 +159,7 @@ def processar_camera(camera):
     epis_ausentes, epis_presentes = detectar_epis(frame)
 
     if epis_ausentes:
-        Ocorrencia.objects.create(
+        ocorrencia = Ocorrencia.objects.create(
             camera=camera,
             tipo='epi_ausente',
             status='nao_conforme',
@@ -131,6 +167,7 @@ def processar_camera(camera):
             frame_path=frame_path,
             pessoas_detectadas=pessoas,
         )
+        gerar_alerta(camera, ocorrencia)
     else:
         Ocorrencia.objects.create(
             camera=camera,

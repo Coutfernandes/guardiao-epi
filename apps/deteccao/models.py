@@ -28,3 +28,24 @@ class Ocorrencia(models.Model):
 
     class Meta:
         ordering = ['-criado_em']
+
+class Alerta(models.Model):
+    NIVEL_CHOICES = [
+        ('critico', 'Critico'),
+        ('aviso', 'Aviso'),
+        ('info', 'Info'),
+    ]
+
+    ocorrencia = models.ForeignKey(Ocorrencia, on_delete=models.CASCADE, related_name='alertas')
+    camera = models.ForeignKey(Camera, on_delete=models.CASCADE, related_name='alertas')
+    nivel = models.CharField(max_length=10, choices=NIVEL_CHOICES, default='aviso')
+    mensagem = models.TextField()
+    reconhecido = models.BooleanField(default=False)
+    reconhecido_em = models.DateTimeField(null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.camera.identificador} - {self.nivel} - {self.criado_em}'
+
+    class Meta:
+        ordering = ['-criado_em']

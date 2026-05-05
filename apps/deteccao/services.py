@@ -1,21 +1,46 @@
 import cv2
 import os
 import uuid
-from datetime import datetime
 from ultralytics import YOLO
 from django.conf import settings
 
-model = None
+model_pessoas = None
+model_epi = None
+
+CLASSES_EPI = {
+    0: 'gloves',
+    1: 'goggles',
+    2: 'helmet',
+    3: 'no gloves',
+    4: 'no goggles',
+    5: 'no helmet',
+    6: 'no shoes',
+    7: 'no vest',
+    8: 'shoes',
+    9: 'vest'
+}
+
+EPIS_AUSENTES = ['no gloves', 'no goggles', 'no helmet', 'no shoes', 'no vest']
+EPIS_PRESENTES = ['gloves', 'goggles', 'helmet', 'shoes', 'vest']
 
 
 def carregar_modelo():
-    global model
-    if model is None:
+    global model_pessoas
+    if model_pessoas is None:
         pasta_models = os.path.join(settings.BASE_DIR, 'models')
         os.makedirs(pasta_models, exist_ok=True)
         caminho_modelo = os.path.join(pasta_models, 'yolov8n.pt')
-        model = YOLO(caminho_modelo)
-    return model
+        model_pessoas = YOLO(caminho_modelo)
+    return model_pessoas
+
+
+def carregar_modelo_epi():
+    global model_epi
+    if model_epi is None:
+        caminho = os.path.join(settings.BASE_DIR, 'models', 'epi_detector.pt')
+        model_epi = YOLO(caminho)
+    return model_epi
+
 
 def capturar_frame(url_stream):
     cap = cv2.VideoCapture(url_stream)
@@ -25,13 +50,11 @@ def capturar_frame(url_stream):
         return frame
     return None
 
+
 def preprocessar_frame(frame, largura=640, altura=640):
-    """
-    Prepara o frame para inferencia no YOLOv8.
-    Redimensiona mantendo o tamanho padrao de entrada do modelo.
-    """
     frame_redimensionado = cv2.resize(frame, (largura, altura))
     return frame_redimensionado
+
 
 def salvar_frame(frame):
     pasta = os.path.join(settings.BASE_DIR, 'media', 'frames')
@@ -52,15 +75,23 @@ def detectar_pessoas(frame):
     return pessoas
 
 
-def analisar_epis_configurados(frame, epis_configurados):
-    """
-    Por enquanto retorna simulacao da deteccao de EPIs.
-    Sera substituido pelo modelo treinado com imagens proprias.
-    """
+def detectar_epis(frame):
+    yolo = carregar_modelo_epi()
+    frame_processado = preprocessar_frame(frame)
+    resultados = yolo(frame_processado, verbose=False)
     epis_ausentes = []
-    for epi in epis_configurados:
-        epis_ausentes.append(epi)
-    return epis_ausentes
+    epis_presentes = []
+    for r in resultados:
+        for box in r.boxes:
+            classe_id = int(box.cls[0])
+            classe_nome = CLASSES_EPI.get(classe_id, '')
+            confianca = float(box.conf[0])
+            if confianca > 0.5:
+                if classe_nome in EPIS_AUSENTES:
+                    epis_ausentes.append(classe_nome)
+                elif classe_nome in EPIS_PRESENTES:
+                    epis_presentes.append(classe_nome)
+    return epis_ausentes, epis_presentes
 
 
 def processar_camera(camera):
@@ -89,12 +120,7 @@ def processar_camera(camera):
         return
 
     frame_path = salvar_frame(frame)
-
-    epis_configurados = list(
-        camera.configuracoes_epi.filter(ativo=True).values_list('tipo_epi', flat=True)
-    ) if hasattr(camera, 'configuracoes_epi') else []
-
-    epis_ausentes = analisar_epis_configurados(frame, epis_configurados)
+    epis_ausentes, epis_presentes = detectar_epis(frame)
 
     if epis_ausentes:
         Ocorrencia.objects.create(

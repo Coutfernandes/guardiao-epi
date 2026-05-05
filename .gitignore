@@ -7,3 +7,6 @@ db.sqlite3
 *.pt
 models/
 media/
+dataset/
+runs/
+roboflow.zip

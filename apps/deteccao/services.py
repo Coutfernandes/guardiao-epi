@@ -5,8 +5,6 @@ from datetime import datetime
 from ultralytics import YOLO
 from django.conf import settings
 
-
-MODEL_PATH = os.path.join(settings.BASE_DIR, 'models', 'yolov8n.pt')
 model = None
 
 
@@ -19,7 +17,6 @@ def carregar_modelo():
         model = YOLO(caminho_modelo)
     return model
 
-
 def capturar_frame(url_stream):
     cap = cv2.VideoCapture(url_stream)
     ret, frame = cap.read()
@@ -28,6 +25,13 @@ def capturar_frame(url_stream):
         return frame
     return None
 
+def preprocessar_frame(frame, largura=640, altura=640):
+    """
+    Prepara o frame para inferencia no YOLOv8.
+    Redimensiona mantendo o tamanho padrao de entrada do modelo.
+    """
+    frame_redimensionado = cv2.resize(frame, (largura, altura))
+    return frame_redimensionado
 
 def salvar_frame(frame):
     pasta = os.path.join(settings.BASE_DIR, 'media', 'frames')
@@ -40,7 +44,8 @@ def salvar_frame(frame):
 
 def detectar_pessoas(frame):
     yolo = carregar_modelo()
-    resultados = yolo(frame, classes=[0], verbose=False)
+    frame_processado = preprocessar_frame(frame)
+    resultados = yolo(frame_processado, classes=[0], verbose=False)
     pessoas = 0
     for r in resultados:
         pessoas += len(r.boxes)

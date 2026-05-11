@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Cameras from './pages/Cameras'
+import Alertas from './pages/Alertas'
 import Layout from './components/Layout'
 
 function RotaProtegida({ children }) {
@@ -31,6 +32,14 @@ function App() {
         element={
           <RotaProtegida>
             <Cameras />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/alertas"
+        element={
+          <RotaProtegida>
+            <Alertas />
           </RotaProtegida>
         }
       />

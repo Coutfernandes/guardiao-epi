@@ -23,3 +23,28 @@ class Camera(models.Model):
 
     class Meta:
         ordering = ['identificador']
+
+class ConfiguracaoEPI(models.Model):
+    TIPOS_EPI = [
+        ('helmet','Capacete'),
+        ('gloves','Luvas'),
+        ('goggles','Oculos de Protecao'),
+        ('vest','Colete Refletivo'),
+        ('shoes','Botina de Seguranca'),
+        ('mask','Mascara'),
+    ]
+    camera = models.ForeignKey(
+        Camera,
+        on_delete=models.CASCADE,
+        related_name='configuracoes_epi'
+    )
+    tipo_epi = models.CharField(max_length=20, choices=TIPOS_EPI)
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.camera.identificador} - {self.tipo_epi}'
+
+    class Meta:
+        unique_together = ['camera', 'tipo_epi']
+        ordering = ['camera', 'tipo_epi']

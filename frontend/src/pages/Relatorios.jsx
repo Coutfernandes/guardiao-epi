@@ -31,12 +31,19 @@ function StatusBadge({ status }) {
 export default function Relatorios() {
   const [ocorrencias, setOcorrencias] = useState([])
   const [cameras, setCameras] = useState([])
-  const [filtros, setFiltros] = useState({
-    camera: '',
-    tipo: '',
-    status: '',
-  })
+  const [filtros, setFiltros] = useState({ camera: '', tipo: '', status: '' })
   const [carregando, setCarregando] = useState(true)
+
+  const handleDownloadPDF = async () => {
+    const res = await api.get('/deteccao/relatorio/pdf/', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'relatorio_guardiao_epi.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
 
   useEffect(() => {
     const carregar = async () => {
@@ -62,8 +69,7 @@ export default function Relatorios() {
   const totalConforme = ocorrenciasFiltradas.filter(o => o.status === 'conforme').length
   const totalNaoConforme = ocorrenciasFiltradas.filter(o => o.status === 'nao_conforme').length
   const taxaConformidade = ocorrenciasFiltradas.length > 0
-    ? Math.round((totalConforme / ocorrenciasFiltradas.length) * 100)
-    : 0
+    ? Math.round((totalConforme / ocorrenciasFiltradas.length) * 100) : 0
 
   const selectStyle = {
     padding: '0.6rem 1rem',
@@ -81,12 +87,31 @@ export default function Relatorios() {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: '#003050', fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>
-          Relatorios
-        </h1>
-        <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-          Historico de ocorrencias e dados do monitoramento
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ color: '#003050', fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>
+              Relatorios
+            </h1>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+              Historico de ocorrencias e dados do monitoramento
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadPDF}
+            style={{
+              padding: '0.65rem 1.25rem',
+              backgroundColor: '#003050',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+            }}
+          >
+            Baixar Relatorio PDF
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>

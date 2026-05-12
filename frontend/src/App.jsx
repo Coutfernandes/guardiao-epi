@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Cameras from './pages/Cameras'
 import Alertas from './pages/Alertas'
+import Relatorios from './pages/Relatorios'
 import ConfiguracaoEPIs from './pages/ConfiguracaoEPIs'
 import Layout from './components/Layout'
 
@@ -41,6 +42,14 @@ function App() {
         element={
           <RotaProtegida>
             <Alertas />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/relatorios"
+        element={
+          <RotaProtegida>
+            <Relatorios />
           </RotaProtegida>
         }
       />

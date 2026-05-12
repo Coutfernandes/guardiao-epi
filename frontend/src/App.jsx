@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Cameras from './pages/Cameras'
 import Alertas from './pages/Alertas'
+import ConfiguracaoEPIs from './pages/ConfiguracaoEPIs'
 import Layout from './components/Layout'
 
 function RotaProtegida({ children }) {
@@ -40,6 +41,14 @@ function App() {
         element={
           <RotaProtegida>
             <Alertas />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/configuracao-epis"
+        element={
+          <RotaProtegida>
+            <ConfiguracaoEPIs />
           </RotaProtegida>
         }
       />

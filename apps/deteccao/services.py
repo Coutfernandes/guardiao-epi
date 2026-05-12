@@ -158,6 +158,13 @@ def processar_camera(camera):
     frame_path = salvar_frame(frame)
     epis_ausentes, epis_presentes = detectar_epis(frame)
 
+    epis_configurados = list(
+        camera.configuracoes_epi.filter(ativo=True).values_list('tipo_epi', flat=True)
+)
+
+    if epis_configurados:
+        epis_ausentes = [e for e in epis_ausentes if e.replace('no ', '') in epis_configurados]
+
     if epis_ausentes:
         ocorrencia = Ocorrencia.objects.create(
             camera=camera,
@@ -166,7 +173,7 @@ def processar_camera(camera):
             epis_ausentes=epis_ausentes,
             frame_path=frame_path,
             pessoas_detectadas=pessoas,
-        )
+    )
         gerar_alerta(camera, ocorrencia)
     else:
         Ocorrencia.objects.create(
@@ -176,4 +183,4 @@ def processar_camera(camera):
             epis_ausentes=[],
             frame_path=frame_path,
             pessoas_detectadas=pessoas,
-        )
+    )

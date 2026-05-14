@@ -67,7 +67,7 @@ export default function Relatorios() {
   })
 
   const totalConforme = ocorrenciasFiltradas.filter(o => o.status === 'conforme').length
-  const totalNaoConforme = ocorrenciasFiltradas.filter(o => o.status === 'nao_conforme').length
+  const totalNaoConforme = ocorrenciasFiltradas.filter(o => o.tipo === 'epi_ausente').length
   const taxaConformidade = ocorrenciasFiltradas.length > 0
     ? Math.round((totalConforme / ocorrenciasFiltradas.length) * 100) : 0
 

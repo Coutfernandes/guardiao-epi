@@ -119,9 +119,19 @@ useEffect(() => {
     await carregarCameras()
     setModal(null)
   }
-  const handleVerificar = async (id) => {
-      await api.post(`/cameras/${id}/verificar/`)
-      await carregarCameras()
+
+const [verificando, setVerificando] = useState(null)
+
+const handleVerificar = async (id) => {
+  try {
+    setVerificando(id)
+    await api.post(`/cameras/${id}/verificar/`)
+    await carregarCameras()
+  } catch (err) {
+    console.error('erro ao verificar:', err)
+  } finally {
+    setVerificando(null)
+  }
 }
   const handleDeletar = async (id) => {
     if (window.confirm('Deseja remover esta camera?')) {
@@ -213,13 +223,20 @@ useEffect(() => {
                 }}>
                   <Pencil size={14} /> Editar
                 </button>
-                <button onClick={() => handleVerificar(camera.id)} style={{
-                  padding: '0.5rem 0.75rem', border: '1px solid #DBEAFE',
-                  borderRadius: '8px', background: 'white', color: '#3B82F6',
-                  cursor: 'pointer'
-                }}>
-                  <Wifi size={14} />
+                
+                <button 
+                  onClick={() => handleVerificar(camera.id)} 
+                  disabled={verificando === camera.id}
+                  style={{
+                          padding: '0.5rem 0.75rem', border: '1px solid #DBEAFE',
+                          borderRadius: '8px', background: 'white', 
+                          color: verificando === camera.id ? '#94A3B8' : '#3B82F6',
+                          cursor: verificando === camera.id ? 'wait' : 'pointer'
+                        }}
+                        >
+                          {verificando === camera.id ? '...' : <Wifi size={14} />}
                 </button>
+
                 <button onClick={() => handleDeletar(camera.id)} style={{
                   padding: '0.5rem 0.75rem', border: '1px solid #FEE2E2',
                   borderRadius: '8px', background: 'white', color: '#EF4444',

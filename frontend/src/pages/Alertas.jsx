@@ -57,6 +57,12 @@ export default function Alertas() {
     await carregarAlertas()
   }
 
+  const handleReconhecerTodos = async () => {
+    const pendentes = alertas.filter(a => !a.reconhecido)
+    await Promise.all(pendentes.map(a => api.patch(`/deteccao/alertas/${a.id}/reconhecer/`)))
+    await carregarAlertas()
+}
+
   const alertasFiltrados = alertas.filter(a => {
     if (filtro === 'todos') return true
     if (filtro === 'criticos') return a.nivel === 'critico'
@@ -69,13 +75,31 @@ export default function Alertas() {
 
   return (
     <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: '#003050', fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>
-          Alertas
-        </h1>
-        <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-          {naoReconhecidos} alertas nao reconhecidos
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ color: '#003050', fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>
+            Alertas </h1>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+              {naoReconhecidos} alertas nao reconhecidos
+            </p>
+        </div>
+        {naoReconhecidos > 0 && (
+        <button
+          onClick={handleReconhecerTodos}
+          style={{
+          padding: '0.65rem 1.25rem',
+          backgroundColor: '#003050',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+        }}
+    >
+        Reconhecer Todos
+      </button>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>

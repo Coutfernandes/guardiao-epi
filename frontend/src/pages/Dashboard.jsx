@@ -121,7 +121,7 @@ export default function Dashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'start' }}>
           {cameras.slice(0, 4).map(cam => {
             const alerta = temEpiAusente(cam)
             return (
@@ -130,7 +130,7 @@ export default function Dashboard() {
                 border: '1px solid #E2E8F0'
               }}>
                 <div style={{
-                  height: '140px', borderRadius: '8px', overflow: 'hidden',
+                  height: '220px', borderRadius: '8px', overflow: 'hidden',
                   marginBottom: '0.75rem', position: 'relative', backgroundColor: '#000'
                 }}>
                   {cam.status === 'online' && token ? (

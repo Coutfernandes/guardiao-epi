@@ -166,14 +166,14 @@ useEffect(() => {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: '1.25rem' }}>
         {camerasFiltradas.map(camera => (
           <div key={camera.id} style={{
             backgroundColor: 'white', borderRadius: '12px',
             border: '1px solid #E2E8F0', overflow: 'hidden'
           }}>
             <div style={{
-              backgroundColor: '#F1F5F9', height: '180px',
+              backgroundColor: '#F1F5F9', height: '280px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               position: 'relative', overflow: 'hidden'
         }}>

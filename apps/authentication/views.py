@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from .utils import registrar_log
 
 
 class LoginView(APIView):
@@ -28,6 +29,8 @@ class LoginView(APIView):
 
         refresh = RefreshToken.for_user(usuario)
 
+        registrar_log(request, 'login', f'Usuario {username} realizou login')
+
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
@@ -45,6 +48,7 @@ class LogoutView(APIView):
             refresh_token = request.data.get('refresh')
             token = RefreshToken(refresh_token)
             token.blacklist()
+            registrar_log(request, 'logout', f'Usuario {request.user.username} realizou logout')
             return Response({'mensagem': 'Logout realizado com sucesso'})
         except Exception:
             return Response({'erro': 'Token invalido'}, status=400)

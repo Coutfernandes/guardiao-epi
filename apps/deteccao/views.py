@@ -63,10 +63,12 @@ class AlertaViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def reconhecer(self, request, pk=None):
+        from apps.authentication.utils import registrar_log
         alerta = self.get_object()
         alerta.reconhecido = True
         alerta.reconhecido_em = timezone.now()
         alerta.save()
+        registrar_log(request, 'reconhecer_alerta', f'Alerta {alerta.id} da camera {alerta.camera.nome} reconhecido')
         return Response(AlertaSerializer(alerta).data)
 
     @action(detail=False, methods=['get'])
@@ -78,6 +80,8 @@ class AlertaViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gerar_relatorio_pdf(request):
+    from apps.authentication.utils import registrar_log
+    registrar_log(request, 'gerar_relatorio', f'Relatorio PDF gerado por {request.user.username}')
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="relatorio_guardiao_epi.pdf"'
 

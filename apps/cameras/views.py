@@ -6,6 +6,7 @@ from django.http import StreamingHttpResponse
 from .models import Camera, ConfiguracaoEPI
 from .serializers import CameraSerializer, ConfiguracaoEPISerializer
 from .services import verificar_camera, verificar_todas_cameras
+from apps.authentication.utils import registrar_log
 
 
 TRADUCAO_EPI = {
@@ -107,6 +108,21 @@ class CameraViewSet(viewsets.ModelViewSet):
     queryset = Camera.objects.all()
     serializer_class = CameraSerializer
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        registrar_log(request, 'criar_camera', f'Camera {response.data.get("nome")} criada')
+        return response
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        registrar_log(request, 'editar_camera', f'Camera {response.data.get("nome")} editada')
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        camera = self.get_object()
+        registrar_log(request, 'deletar_camera', f'Camera {camera.nome} deletada')
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['patch'])
     def status(self, request, pk=None):
         camera = self.get_object()
@@ -150,6 +166,7 @@ class CameraViewSet(viewsets.ModelViewSet):
             if not criado:
                 config.ativo = ativo
                 config.save()
+            registrar_log(request, 'configurar_epi', f'EPI {tipo_epi} configurado na camera {camera.nome}')
             return Response(ConfiguracaoEPISerializer(config).data)
 
     @action(detail=True, methods=['get'], authentication_classes=[], permission_classes=[])
@@ -157,7 +174,6 @@ class CameraViewSet(viewsets.ModelViewSet):
         from rest_framework_simplejwt.tokens import AccessToken
         from rest_framework_simplejwt.exceptions import TokenError
         from apps.authentication.models import Usuario
-        from rest_framework.permissions import AllowAny
 
         token = request.query_params.get('token')
         if not token:
@@ -177,9 +193,7 @@ class CameraViewSet(viewsets.ModelViewSet):
         return StreamingHttpResponse(
             gerar_frames(camera.url_stream, camera.id),
             content_type='multipart/x-mixed-replace; boundary=frame'
-)
-
-
+        )
 class ConfiguracaoEPIViewSet(viewsets.ModelViewSet):
     queryset = ConfiguracaoEPI.objects.all()
     serializer_class = ConfiguracaoEPISerializer

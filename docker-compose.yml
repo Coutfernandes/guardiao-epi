@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: guardiao_db
+    environment:
+      POSTGRES_DB: guardiao_epi
+      POSTGRES_USER: guardiao
+      POSTGRES_PASSWORD: guardiao2026
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  web:
+    build: .
+    container_name: guardiao_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://guardiao:guardiao2026@db:5432/guardiao_epi
+      - SECRET_KEY=guardiao-epi-secret-key-2026
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  postgres_data:
+  media_data:

@@ -1,4 +1,7 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -12,8 +15,12 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from .models import Ocorrencia, Alerta
 from .serializers import OcorrenciaSerializer, AlertaSerializer
-from .services import processar_camera
+from .services import processar_camera, gerar_alerta
 from apps.cameras.models import Camera
+import json
+import base64
+import uuid
+import os
 
 
 class OcorrenciaViewSet(viewsets.ReadOnlyModelViewSet):
@@ -77,6 +84,57 @@ class AlertaViewSet(viewsets.ModelViewSet):
         return Response(AlertaSerializer(alertas, many=True).data)
 
 
+@csrf_exempt
+@require_POST
+def receber_deteccao_api(request):
+    try:
+        dados = json.loads(request.body)
+
+        camera_id = dados.get('camera_id')
+        tipo = dados.get('tipo')
+        status_ocorrencia = dados.get('status_ocorrencia')
+        pessoas_detectadas = dados.get('pessoas_detectadas', 0)
+        epis_ausentes = dados.get('epis_ausentes', [])
+        frame_b64 = dados.get('frame_b64', '')
+        status_camera = dados.get('status_camera', 'online')
+
+        camera = Camera.objects.get(id=camera_id)
+        camera.status = status_camera
+        camera.save()
+
+        if tipo == 'ignorar':
+            return JsonResponse({'status': 'ignorado'})
+
+        frame_path = ''
+        if frame_b64:
+            pasta = os.path.join(settings.BASE_DIR, 'media', 'frames')
+            os.makedirs(pasta, exist_ok=True)
+            nome = f'{uuid.uuid4()}.jpg'
+            caminho = os.path.join(pasta, nome)
+            with open(caminho, 'wb') as f:
+                f.write(base64.b64decode(frame_b64))
+            frame_path = f'media/frames/{nome}'
+
+        ocorrencia = Ocorrencia.objects.create(
+            camera=camera,
+            tipo=tipo,
+            status=status_ocorrencia,
+            epis_ausentes=epis_ausentes,
+            frame_path=frame_path,
+            pessoas_detectadas=pessoas_detectadas,
+        )
+
+        if tipo in ['epi_ausente', 'equipment_fault']:
+            gerar_alerta(camera, ocorrencia)
+
+        return JsonResponse({'status': 'ok', 'ocorrencia_id': ocorrencia.id})
+
+    except Camera.DoesNotExist:
+        return JsonResponse({'erro': 'Camera nao encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'erro': str(e)}, status=500)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gerar_relatorio_pdf(request):
@@ -93,28 +151,16 @@ def gerar_relatorio_pdf(request):
     elementos = []
 
     titulo_style = ParagraphStyle(
-        'Titulo',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors.HexColor('#003050'),
-        spaceAfter=0.5*cm
+        'Titulo', parent=styles['Heading1'], fontSize=18,
+        textColor=colors.HexColor('#003050'), spaceAfter=0.5*cm
     )
-
     subtitulo_style = ParagraphStyle(
-        'Subtitulo',
-        parent=styles['Normal'],
-        fontSize=10,
-        textColor=colors.HexColor('#64748B'),
-        spaceAfter=1*cm
+        'Subtitulo', parent=styles['Normal'], fontSize=10,
+        textColor=colors.HexColor('#64748B'), spaceAfter=1*cm
     )
-
     secao_style = ParagraphStyle(
-        'Secao',
-        parent=styles['Heading2'],
-        fontSize=12,
-        textColor=colors.HexColor('#003050'),
-        spaceBefore=0.5*cm,
-        spaceAfter=0.3*cm
+        'Secao', parent=styles['Heading2'], fontSize=12,
+        textColor=colors.HexColor('#003050'), spaceBefore=0.5*cm, spaceAfter=0.3*cm
     )
 
     elementos.append(Paragraph('Guardiao EPI', titulo_style))
@@ -162,10 +208,7 @@ def gerar_relatorio_pdf(request):
 
     elementos.append(Paragraph('Ocorrencias de EPI Ausente', secao_style))
 
-    ocorrencias_epi = Ocorrencia.objects.filter(
-        tipo='epi_ausente'
-    ).order_by('-criado_em')[:20]
-
+    ocorrencias_epi = Ocorrencia.objects.filter(tipo='epi_ausente').order_by('-criado_em')[:20]
     TRADUCAO = {
         'no helmet': 'sem capacete', 'no gloves': 'sem luvas',
         'no goggles': 'sem oculos', 'no vest': 'sem colete', 'no shoes': 'sem botina'
@@ -174,12 +217,7 @@ def gerar_relatorio_pdf(request):
     dados_epi = [['Data/Hora', 'Camera', 'EPIs Ausentes', 'Pessoas']]
     for o in ocorrencias_epi:
         epis = ', '.join([TRADUCAO.get(e, e) for e in o.epis_ausentes])
-        dados_epi.append([
-            o.criado_em.strftime('%d/%m/%Y %H:%M'),
-            o.camera.nome,
-            epis,
-            str(o.pessoas_detectadas)
-        ])
+        dados_epi.append([o.criado_em.strftime('%d/%m/%Y %H:%M'), o.camera.nome, epis, str(o.pessoas_detectadas)])
 
     tabela_epi = Table(dados_epi, colWidths=[4*cm, 4*cm, 6*cm, 3*cm])
     tabela_epi.setStyle(TableStyle([
@@ -197,17 +235,10 @@ def gerar_relatorio_pdf(request):
 
     elementos.append(Paragraph('Falhas de Equipamento', secao_style))
 
-    ocorrencias_falha = Ocorrencia.objects.filter(
-        tipo='equipment_fault'
-    ).order_by('-criado_em')[:10]
-
+    ocorrencias_falha = Ocorrencia.objects.filter(tipo='equipment_fault').order_by('-criado_em')[:10]
     dados_falha = [['Data/Hora', 'Camera', 'Status']]
     for o in ocorrencias_falha:
-        dados_falha.append([
-            o.criado_em.strftime('%d/%m/%Y %H:%M'),
-            o.camera.nome,
-            'Camera Offline'
-        ])
+        dados_falha.append([o.criado_em.strftime('%d/%m/%Y %H:%M'), o.camera.nome, 'Camera Offline'])
 
     tabela_falha = Table(dados_falha, colWidths=[5*cm, 6*cm, 6*cm])
     tabela_falha.setStyle(TableStyle([

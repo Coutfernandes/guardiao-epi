@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OcorrenciaViewSet, AlertaViewSet, gerar_relatorio_pdf
+from .views import OcorrenciaViewSet, AlertaViewSet, gerar_relatorio_pdf, receber_deteccao_api
 
 router = DefaultRouter()
 router.register(r'deteccao/ocorrencias', OcorrenciaViewSet, basename='ocorrencia')
@@ -10,4 +10,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('deteccao/processar/', OcorrenciaViewSet.as_view({'post': 'processar'})),
     path('deteccao/relatorio/pdf/', gerar_relatorio_pdf, name='relatorio_pdf'),
+    path('deteccao/receber/', receber_deteccao_api, name='receber_deteccao'),
 ]

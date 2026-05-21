@@ -10,3 +10,4 @@ media/
 dataset/
 runs/
 roboflow.zip
+backup.json

@@ -17,7 +17,9 @@ services:
   web:
     build: .
     container_name: guardiao_web
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate &&
+          python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
       - media_data:/app/media

@@ -197,7 +197,7 @@ const handleVerificar = async (id) => {
             </span>
           {camera.status === 'online' ? (
               <img
-              src={`http://127.0.0.1:8000/api/cameras/${camera.id}/stream/?token=${localStorage.getItem('access_token')}`}
+              src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/cameras/${camera.id}/stream/?token=${localStorage.getItem('access_token')}`}
               alt={camera.nome}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

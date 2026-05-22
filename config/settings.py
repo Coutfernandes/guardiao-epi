@@ -79,6 +79,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://guardiao-epi.duckdns.org',
+    'https://guardiao-epi.vercel.app',
+]
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',

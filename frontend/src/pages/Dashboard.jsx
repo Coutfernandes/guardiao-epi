@@ -135,7 +135,7 @@ export default function Dashboard() {
                 }}>
                   {cam.status === 'online' && token ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/cameras/${cam.id}/stream/?token=${token}`}
+                      src={cam.url_stream?.includes('ngrok') ? cam.url_stream : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/cameras/${cam.id}/stream/?token=${token}`}
                       alt={cam.nome}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />

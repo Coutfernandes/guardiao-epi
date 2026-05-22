@@ -197,7 +197,7 @@ const handleVerificar = async (id) => {
             </span>
           {camera.status === 'online' ? (
               <img
-              src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/cameras/${camera.id}/stream/?token=${localStorage.getItem('access_token')}`}
+              src={camera.url_stream?.includes('ngrok') ? camera.url_stream : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/api/cameras/${camera.id}/stream/?token=${localStorage.getItem('access_token')}`}
               alt={camera.nome}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

@@ -77,10 +77,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+ALLOWED_HOSTS = ['*']
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://guardiao-epi.vercel.app',
+    'https://guardiao-epi.duckdns.org',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

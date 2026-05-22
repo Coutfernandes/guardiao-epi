@@ -11,8 +11,8 @@ Sistema inteligente de monitoramento de Equipamentos de Proteção Individual (E
 | Serviço | URL |
 |---------|-----|
 | Frontend | https://guardiao-epi.vercel.app |
-| Backend API | https://guardiao-epi.duckdns.org/api |
-| Admin Django | https://guardiao-epi.duckdns.org/admin |
+| Backend API | 
+| Admin Django | 
 
 ---
 

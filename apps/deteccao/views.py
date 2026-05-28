@@ -102,8 +102,42 @@ def receber_deteccao_api(request):
         camera.status = status_camera
         camera.save()
 
+        if tipo == 'ignorar':
+            return JsonResponse({'status': 'ignorado'})
 
+        # Cooldown 24h para equipment_fault - registra apenas 1 por dia por camera
+        if tipo == 'equipment_fault':
+            from django.utils import timezone
+            from datetime import timedelta
+            ja_existe = Ocorrencia.objects.filter(
+                camera=camera,
+                tipo='equipment_fault',
+                criado_em__gte=timezone.now() - timedelta(hours=24)
+            ).exists()
+            if ja_existe:
+                return JsonResponse({'status': 'ignorado', 'motivo': 'cooldown equipment_fault'})
 
+        frame_path = ''
+        if frame_b64:
+            pasta = os.path.join(settings.BASE_DIR, 'media', 'frames')
+            os.makedirs(pasta, exist_ok=True)
+            nome = f'{uuid.uuid4()}.jpg'
+            caminho = os.path.join(pasta, nome)
+            with open(caminho, 'wb') as f:
+                f.write(base64.b64decode(frame_b64))
+            frame_path = f'media/frames/{nome}'
+
+        ocorrencia = Ocorrencia.objects.create(
+            camera=camera,
+            tipo=tipo,
+            status=status_ocorrencia,
+            epis_ausentes=epis_ausentes,
+            frame_path=frame_path,
+            pessoas_detectadas=pessoas_detectadas,
+        )
+
+        if tipo in ['epi_ausente', 'equipment_fault']:
+            gerar_alerta(camera, ocorrencia)
         return JsonResponse({'status': 'ok', 'ocorrencia_id': ocorrencia.id})
 
     except Camera.DoesNotExist:

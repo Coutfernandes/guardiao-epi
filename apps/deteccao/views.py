@@ -117,6 +117,18 @@ def receber_deteccao_api(request):
             if ja_existe:
                 return JsonResponse({'status': 'ignorado', 'motivo': 'cooldown equipment_fault'})
 
+        # Cooldown 2 minutos para epi_ausente e conformidade
+        if tipo in ['epi_ausente', 'conformidade']:
+            from django.utils import timezone
+            from datetime import timedelta
+            ja_existe = Ocorrencia.objects.filter(
+                camera=camera,
+                tipo=tipo,
+                criado_em__gte=timezone.now() - timedelta(minutes=2)
+            ).exists()
+            if ja_existe:
+                return JsonResponse({'status': 'ignorado', 'motivo': 'cooldown ocorrencia'})
+            
         frame_path = ''
         if frame_b64:
             pasta = os.path.join(settings.BASE_DIR, 'media', 'frames')

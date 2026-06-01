@@ -309,7 +309,7 @@ ngrok http 8080
 
 ## 📄 Licenca
 
-Este projeto esta sob a licenca MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto esta sob a licenca MIT. Veja o arquivo [LICENSE](LICENSE.) para mais detalhes.
 
 ---
 

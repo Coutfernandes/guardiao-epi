@@ -1,4 +1,4 @@
-# 🛡️ Guardiao EPI
+# Guardiao EPI
 
 <div align="center">
 
